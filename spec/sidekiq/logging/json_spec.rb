@@ -1,8 +1,40 @@
 require 'spec_helper'
 
 describe "Sidekiq::Logging::Json" do
+  describe "field prefix configuration" do
+    context "prefix_custom_fields_with_at => true" do
+      subject { JSON.parse(Sidekiq::Logging::Json::Logger.new(:prefix_custom_fields_with_at => true).call(severity, time, program_name, logentry)) }
+      let(:logentry) { "Some random message" }
+      let(:message) { subject["@message"] }
+      let(:status) { subject["@status"] }
+      let(:run_time) { subject["@run_time"] }
+      let(:severity) { "INFO" }
+      let(:time) { Time.now }
+      let(:program_name) { "RSpec" }
+
+      it { expect(message).to match(/#{logentry}/) }
+      it { expect(status).to eq(nil) }
+      it { expect(run_time).to eq(nil) }
+    end
+
+    context "prefix_custom_fields_with_at => false" do
+      subject { JSON.parse(Sidekiq::Logging::Json::Logger.new(:prefix_custom_fields_with_at => false).call(severity, time, program_name, logentry)) }
+      let(:logentry) { "Some random message" }
+      let(:message) { subject["message"] }
+      let(:status) { subject["status"] }
+      let(:run_time) { subject["run_time"] }
+      let(:severity) { "INFO" }
+      let(:time) { Time.now }
+      let(:program_name) { "RSpec" }
+
+      it { expect(message).to match(/#{logentry}/) }
+      it { expect(status).to eq(nil) }
+      it { expect(run_time).to eq(nil) }
+    end
+  end
+
   describe "process_message" do
-    subject { JSON.parse(Sidekiq::Logging::Json::Logger.new.call(severity, time, program_name, logentry)) }
+    subject { JSON.parse(Sidekiq::Logging::Json::Logger.new().call(severity, time, program_name, logentry)) }
     let(:logentry) { "Some random message" }
     let(:message) { subject["@message"] }
     let(:status) { subject["@status"] }
